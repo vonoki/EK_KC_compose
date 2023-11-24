@@ -1,0 +1,244 @@
+version: '3.9'
+
+services:
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.1
+    hostname: zookeeper
+    networks:
+      - esnet
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - type: volume
+        source: zoo_data
+        target: /var/lib/zookeeper/data
+      - type: volume
+        source: zoo_log
+        target: /var/lib/zookeeper/log
+    
+
+  broker:
+    image: confluentinc/cp-kafka:7.5.1
+    hostname: broker
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:29092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092, OUTSIDE://broker:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:SSL
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 
+      KAFKA_SECURITY_PROTOCOL: SSL
+      KAFKA_SSL_KEYSTORE_FILENAME: broker_keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker_keystore_cred.txt
+      KAFKA_SSL_KEY_CREDENTIALS: broker_key_cred.txt
+      KAFKA_SSL_TRUSTSTORE_FILENAME: broker_truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker_truststore_cred.txt
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: 
+      #KAFKA_MESSAGE_MAX_BYTES: 400000000
+      #KAFKA_SOCKET_REQUEST_MAX_BYTES: 400001200
+    depends_on:
+      - zookeeper
+    networks:
+      - esnet
+    volumes:
+      - type: volume
+        source: broker_data
+        target: /var/lib/kafka/data
+      - type: bind
+        source: /opt/EKK/broker_certs
+        target: /etc/kafka/secrets
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 29092:29092
+
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.5.1
+    hostname: kafka-connect
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: broker:29092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: 'connect'
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-config
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_REPLICATION_FACTOR: 1
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      # CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'false'
+      # CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: 'io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor'
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: 'io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor'
+      CONNECT_REST_ADVERTISED_HOST_NAME: 'connect'
+      CONNECT_ZOOKEEPER_CONNECT: zookeeper:2181
+      # CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+      CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
+      CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-3.3.0.jar
+      CONNECT_CONNECTIONS_MAX_IDLE_MS: 5400000
+      CONNECT_PLUGIN_PATH: /connect-plugins
+      CONNECT_SECURITY_PROTOCOL: SSL
+      CONNECT_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
+      CONNECT_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEY_PASSWORD: changeit
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
+      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
+      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
+    volumes:
+      - type: bind
+        source: /opt/EKK/connect-plugins
+        target: /connect-plugins
+      - type: bind
+        source: /opt/EKK/connect_certs
+        target: /connect_certs
+    networks:
+      - esnet
+    ports:
+      - 8083:8083
+    depends_on:
+      - zookeeper
+      - broker
+    
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    hostname: elasticsearch
+    environment:
+      cluster.name: hyphy
+      node.name: es01
+      # discovery.seed_hosts: es01
+      # discovery.type: single-node
+      cluster.initial_master_nodes: es01
+      ELASTIC_PASSWORD: temp
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "true"
+      xpack.security.http.ssl.key: /usr/share/elasticsearch/config/certificates/elasticsearch.key
+      xpack.security.http.ssl.certificate_authorities: /usr/share/elasticsearch/config/certificates/ca.crt
+      xpack.security.http.ssl.certificate: /usr/share/elasticsearch/config/certificates/elasticsearch.crt
+      xpack.security.http.ssl.supported_protocols: TLSv1.3,TLSv1.2
+      xpack.security.transport.ssl.enabled: "true"
+      # xpack.security.transport.ssl.verification_mode=certificate
+      xpack.security.transport.ssl.certificate_authorities: /usr/share/elasticsearch/config/certificates/ca.crt
+      xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certificates/elasticsearch.crt
+      xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certificates/elasticsearch.key
+      xpack.security.transport.ssl.supported_protocols: TLSv1.3,TLSv1.2
+      # xpack.monitoring.enabled=false
+      xpack.security.authc.api_key.enabled: "true"
+      path.repo: /usr/share/elasticsearch/data,/usr/share/elasticsearch/backups
+      bootstrap.memory_lock: "true"
+      ES_JAVA_OPTS: -Xms2g -Xmx2g 
+      Des.enforce.bootstrap.checks: "true"
+    command: /bin/bash -c "cp -r /run/secrets /usr/share/elasticsearch/config/certificates && /usr/local/bin/docker-entrypoint.sh eswrapper"
+    volumes:
+      - type: volume
+        source: esdata
+        target: /usr/share/elasticsearch/data
+      - type: bind
+        source: /opt/EKK/backups
+        target: /usr/share/elasticsearch/backups
+    networks:
+      - esnet
+    ports:
+      - 9200:9200
+    secrets:
+      - ca.crt
+      - elasticsearch.crt
+      - elasticsearch.key
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s --cacert /usr/share/elasticsearch/config/certificates/ca.crt https://127.0.0.1:9200 | grep -q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
+
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.2
+    hostname: kibana
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: https://elasticsearch:9200
+      ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: /usr/share/kibana/certificates/ca.crt
+      SERVER_SSL_ENABLED: "true"
+      SERVER_SSL_KEY: /usr/share/kibana/certificates/kibana.key
+      SERVER_SSL_CERTIFICATE: /usr/share/kibana/certificates/kibana.crt
+      SERVER_PUBLICBASEURL: insertpublicurlhere
+      SERVER_SSL_SUPPORTEDPROTOCOLS: '["TLSv1.3","TLSv1.2"]'
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: insertkibanapasswordhere
+      XPACK_SECURITY_ENABLED: "true"
+      XPACK_SECURITY_ENCRYPTIONKEY: kibanakey
+      XPACK_REPORTING_ENCRYPTIONKEY: kibanakey
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: kibanakey
+    command: /bin/bash -c "cp -r /run/secrets /usr/share/kibana/certificates && /usr/local/bin/kibana-docker"
+    secrets:
+      - ca.crt
+      - kibana.crt
+      - kibana.key
+    networks:
+      - esnet
+    ports:
+      - 443:5601
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -k -s -I https://127.0.0.1:5601 | grep -q 'HTTP/1.1 302 Found'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
+secrets:
+  ca.crt:
+    external: true
+  elasticsearch.crt:
+    external: true
+  elasticsearch.key:
+    external: true
+  kibana.crt:
+    external: true
+  kibana.key:
+    external: true
+
+volumes:
+  esdata:
+    driver: local
+  broker_data:
+    external: true
+  zoo_data:
+    external: true
+  zoo_log:
+    external: true
+  
+
+networks:
+  esnet:
+    driver: overlay
