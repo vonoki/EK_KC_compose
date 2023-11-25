@@ -162,10 +162,6 @@ services:
       - esnet
     ports:
       - 9200:9200
-    secrets:
-      - ca.crt
-      - elasticsearch.crt
-      - elasticsearch.key
     ulimits:
       memlock:
         soft: -1
@@ -174,7 +170,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -s --cacert /usr/share/elasticsearch/config/certificates/ca.crt https://127.0.0.1:9200 | grep -q 'missing authentication credentials'",
+          "curl -s --cacert /usr/share/elasticsearch/config/certificates/root-ca.crt https://127.0.0.1:9200 | grep -q 'missing authentication credentials'",
         ]
       interval: 10s
       timeout: 10s
@@ -188,7 +184,7 @@ services:
     environment:
       SERVER_NAME: kibana
       ELASTICSEARCH_HOSTS: https://elasticsearch:9200
-      ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: /usr/share/kibana/certificates/ca.crt
+      ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES: /usr/share/kibana/certificates/root-ca.crt
       SERVER_SSL_ENABLED: "true"
       SERVER_SSL_KEY: /usr/share/kibana/certificates/kibana.key
       SERVER_SSL_CERTIFICATE: /usr/share/kibana/certificates/kibana.crt
