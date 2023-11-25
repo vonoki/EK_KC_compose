@@ -64,7 +64,7 @@ services:
     image: confluentinc/cp-kafka-connect:7.5.1
     hostname: kafka-connect
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: broker:29092
+      CONNECT_BOOTSTRAP_SERVERS: broker:9092
       CONNECT_REST_PORT: 8083
       CONNECT_GROUP_ID: 'connect'
       CONNECT_CONFIG_STORAGE_TOPIC: connect-config
@@ -90,7 +90,7 @@ services:
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
       CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-3.3.0.jar
-      CONNECT_CONNECTIONS_MAX_IDLE_MS: 5400000
+      #CONNECT_CONNECTIONS_MAX_IDLE_MS: 5400000
       CONNECT_PLUGIN_PATH: /connect-plugins
       CONNECT_SECURITY_PROTOCOL: SSL
       CONNECT_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
@@ -147,7 +147,7 @@ services:
       bootstrap.memory_lock: "true"
       ES_JAVA_OPTS: -Xms2g -Xmx2g 
       Des.enforce.bootstrap.checks: "true"
-    command: /bin/bash -c "cp -r /run/secrets /usr/share/elasticsearch/config/certificates && /usr/local/bin/docker-entrypoint.sh eswrapper"
+    command: /bin/bash -c "/usr/local/bin/docker-entrypoint.sh eswrapper"
     volumes:
       - type: volume
         source: esdata
@@ -155,6 +155,9 @@ services:
       - type: bind
         source: /opt/EKK/backups
         target: /usr/share/elasticsearch/backups
+      - type: bind
+        source: /opt/EKK/certs
+        target: /usr/share/elasticsearch/config/certificates    
     networks:
       - esnet
     ports:
@@ -197,11 +200,11 @@ services:
       XPACK_SECURITY_ENCRYPTIONKEY: kibanakey
       XPACK_REPORTING_ENCRYPTIONKEY: kibanakey
       XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: kibanakey
-    command: /bin/bash -c "cp -r /run/secrets /usr/share/kibana/certificates && /usr/local/bin/kibana-docker"
-    secrets:
-      - ca.crt
-      - kibana.crt
-      - kibana.key
+    command: /bin/bash -c "/usr/local/bin/kibana-docker"
+    volumes:
+      - type: bind
+        source: /opt/EKK/certs
+        target: /usr/share/kibana/certificates
     networks:
       - esnet
     ports:
@@ -216,18 +219,6 @@ services:
       timeout: 10s
       retries: 120
 
-secrets:
-  ca.crt:
-    external: true
-  elasticsearch.crt:
-    external: true
-  elasticsearch.key:
-    external: true
-  kibana.crt:
-    external: true
-  kibana.key:
-    external: true
-
 volumes:
   esdata:
     driver: local
@@ -241,4 +232,4 @@ volumes:
 
 networks:
   esnet:
-    driver: overlay
+    driver: bridge

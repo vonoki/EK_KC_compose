@@ -4,6 +4,7 @@
 function generateCA() {
 
   mkdir -p certs
+  sudo chown -hR 1000 /opt/EKK/certs
 
   openssl genrsa -out certs/root-ca.key
   openssl req -new -key certs/root-ca.key -out certs/root-ca.csr -subj "$CERT_STRING/CN=ekk"
@@ -60,10 +61,25 @@ function generatekibanacert() {
   mv certs/kibana.key certs/kibana.key.pem && openssl pkcs8 -in certs/kibana.key.pem -topk8 -nocrypt -out certs/kibana.key
 }
 
+function populatecerts() {
+  #add to docker secrets
+  echo -e "\e[32m[X]\e[0m Adding certificates and keys to Docker"
+  #ca cert
+  docker secret create ca.crt certs/root-ca.crt
+
+  #elasticsearch server
+  docker secret create elasticsearch.key certs/elasticsearch.key
+  docker secret create elasticsearch.crt certs/elasticsearch.crt
+
+  #kibana server
+  docker secret create kibana.key certs/kibana.key
+  docker secret create kibana.crt certs/kibana.crt
+}
 
 function generateconnectcert() {
 
-  mkdir connect_certs
+  mkdir -p connect_certs
+  sudo chown -hR 1000 /opt/EKK/connect_certs
   openssl genrsa -out connect_certs/connect.key
 
   openssl req -new -key connect_certs/connect.key -out connect_certs/connect.csr -subj "$CERT_STRING/CN=kafka-connect"
@@ -93,6 +109,7 @@ function generateconnectcert() {
 function generatebrokercert() {
 
   mkdir broker_certs
+  sudo chown -hR 1000 /opt/EKK/broker_certs
 
   keytool -keystore broker_certs/broker_truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
 
@@ -118,21 +135,6 @@ function initdockerswarm() {
     echo -e "\e[31m[!]\e[0m Failed to initialize docker swarm (Is $logstaship the correct IP address?) - exiting"
     exit 1
   fi
-}
-
-function populatecerts() {
-  #add to docker secrets
-  echo -e "\e[32m[X]\e[0m Adding certificates and keys to Docker"
-  #ca cert
-  docker secret create ca.crt certs/root-ca.crt
-
-  #elasticsearch server
-  docker secret create elasticsearch.key certs/elasticsearch.key
-  docker secret create elasticsearch.crt certs/elasticsearch.crt
-
-  #kibana server
-  docker secret create kibana.key certs/kibana.key
-  docker secret create kibana.crt certs/kibana.crt
 }
 
 function generatepasswords() {
@@ -161,7 +163,7 @@ function configuredocker() {
 
 
 function deploylme() {
-  docker stack deploy EKK -c /opt/EKK/docker-compose.yml
+  docker compose up -d
 }
 
 function setroles() {
@@ -234,7 +236,7 @@ curl -X POST https://localhost:8083/connectors -H 'Content-Type: application/jso
 
 
 function install() {
-  echo -e "Swarm config"
+  echo -e "Compose config"
   read -e -p "Proceed ([y]es/[n]o):" -i "y" check
 
   if [ "$check" == "n" ]; then
@@ -257,16 +259,13 @@ function install() {
   generateCA
   generateelasticcert
   generatekibanacert
-  sudo chown -hR 1000 /opt/EKK/certs
   generateconnectcert
-  sudo chown -hR 1000 /opt/EKK/connect_certs
   generatebrokercert
-  sudo chown -hR 1000 /opt/EKK/broker_certs
   mkdir -p broker_data
   sudo chown -hR 1000 /opt/EKK/broker_data
   mkdir -p zoo_data
-  mkdir -p zoo_log
   sudo chown -hR 1000 /opt/EKK/zoo_data
+  mkdir -p zoo_log
   sudo chown -hR 1000 /opt/EKK/zoo_log
 
   initdockerswarm
