@@ -63,7 +63,6 @@ function generatekibanacert() {
 function generateconnectcert() {
 
   mkdir -p connect_certs
-  sudo chown -hR 1000 /opt/EKK/connect_certs
 
   openssl genrsa -out connect_certs/connect.key
 
@@ -89,12 +88,15 @@ function generateconnectcert() {
 
   keytool -destkeystore connect_certs/connect.keystore.jks -importkeystore -srckeystore connect_certs/connect.p12 -srcstoretype PKCS12
 
+  echo "changeit" > connect_certs/connect_keystore_cred.txt
+  echo "changeit" > connect_certs/connect_key_cred.txt
+  echo "changeit" > connect_certs/connect_truststore_cred.txt
+
 }
 
 function generatebrokercert() {
 
   mkdir broker_certs
-  sudo chown -hR 1000 /opt/EKK/broker_certs
 
   keytool -keystore broker_certs/broker_truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
 
@@ -237,9 +239,11 @@ function install() {
   generatekibanacert
   generateconnectcert
   generatebrokercert
+  sudo chown -R 777 /opt/EKK/connect_certs
+  sudo chmod -R 777 /opt/EKK/broker_certs
   sudo chmod -R 777 /opt/EKK/certs
   mkdir -p broker_data
-  sudo chown -hR 1000 /opt/EKK/broker_data
+  sudo chmod -R 777 /opt/EKK/broker_data
 
   generatepasswords
   configuredocker

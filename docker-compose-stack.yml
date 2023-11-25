@@ -9,9 +9,8 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:29092,CONTROLLER://:9093
       KAFKA_ADVERTISED_LISTENERS: INSIDE://broker:9092,OUTSIDE://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:SSL,OUTSIDE:SSL,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:SSL,OUTSIDE:SSL,CONTROLLER:SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -40,7 +39,6 @@ services:
       - type: bind
         source: /opt/EKK/broker_certs
         target: /etc/kafka/secrets
-      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 29092:29092
 
@@ -69,7 +67,6 @@ services:
       CONNECT_PRODUCER_INTERCEPTOR_CLASSES: 'io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor'
       CONNECT_CONSUMER_INTERCEPTOR_CLASSES: 'io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor'
       CONNECT_REST_ADVERTISED_HOST_NAME: 'connect'
-      CONNECT_ZOOKEEPER_CONNECT: zookeeper:2181
       # CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
@@ -78,16 +75,16 @@ services:
       CONNECT_PLUGIN_PATH: /connect-plugins
       CONNECT_SECURITY_PROTOCOL: SSL
       CONNECT_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
-      CONNECT_SSL_KEYSTORE_PASSWORD: changeit
-      CONNECT_SSL_KEY_PASSWORD: changeit
+      CONNECT_SSL_KEYSTORE_PASSWORD: /connect_certs/connect_keystore_cred.txt
+      CONNECT_SSL_KEY_PASSWORD: /connect_certs/connect_key_cred.txt
       CONNECT_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
-      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: /connect_certs/connect_truststore_cred.txt
       CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
       CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
-      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
-      CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: /connect_certs/connect_keystore_cred.txt
+      CONNECT_CONSUMER_SSL_KEY_PASSWORD: /connect_certs/connect_key_cred.txt
       CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
-      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: /connect_certs/connect_truststore_cred.txt
     volumes:
       - type: bind
         source: /opt/EKK/connect-plugins
