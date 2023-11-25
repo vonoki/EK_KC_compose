@@ -30,8 +30,6 @@ services:
       KAFKA_ENABLE_KRAFT: 'yes'
       CLUSTER_ID: 45vUBEgyQjSywv_811biQw
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-    depends_on:
-      - zookeeper
     networks:
       - esnet
     volumes:
@@ -101,7 +99,6 @@ services:
     ports:
       - 8083:8083
     depends_on:
-      - zookeeper
       - broker
     
   elasticsearch:
