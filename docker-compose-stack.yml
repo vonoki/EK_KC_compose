@@ -76,16 +76,16 @@ services:
       CONNECT_PLUGIN_PATH: /connect-plugins
       CONNECT_SECURITY_PROTOCOL: SSL
       CONNECT_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
-      CONNECT_SSL_KEYSTORE_PASSWORD: /connect_certs/connect_keystore_cred.txt
-      CONNECT_SSL_KEY_PASSWORD: /connect_certs/connect_key_cred.txt
+      CONNECT_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEY_PASSWORD: changeit
       CONNECT_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
-      CONNECT_SSL_TRUSTSTORE_PASSWORD: /connect_certs/connect_truststore_cred.txt
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
       CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
       CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /connect_certs/connect.keystore.jks
-      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: /connect_certs/connect_keystore_cred.txt
-      CONNECT_CONSUMER_SSL_KEY_PASSWORD: /connect_certs/connect_key_cred.txt
+      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
       CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /connect_certs/connect.truststore.jks
-      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: /connect_certs/connect_truststore_cred.txt
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
     volumes:
       - type: bind
         source: /opt/EKK/connect-plugins
