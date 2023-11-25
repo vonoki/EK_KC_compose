@@ -60,6 +60,27 @@ function generatekibanacert() {
   mv certs/kibana.key certs/kibana.key.pem && openssl pkcs8 -in certs/kibana.key.pem -topk8 -nocrypt -out certs/kibana.key
 }
 
+function generatebrokercert() {
+
+  mkdir broker_certs
+
+  keytool -keystore broker_certs/broker_truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
+
+  keytool -keystore broker_certs/broker_keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" -ext SAN=DNS:broker
+
+  keytool -keystore broker_certs/broker_keystore.jks -alias broker -certreq -file broker_certs/broker-unsigned.crt -storepass changeit -noprompt
+
+  openssl x509 -req -CA certs/root-ca.crt -CAkey certs/root-ca.key -in broker_certs/broker-unsigned.crt -out broker_certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
+
+  keytool -keystore broker_certs/broker_keystore.jks -alias ekk-root-ca -importcert -file certs/root-ca.crt -storepass changeit -noprompt
+
+  keytool -keystore broker_certs/broker_keystore.jks -alias broker -importcert -file broker_certs/broker.crt -storepass changeit -noprompt
+
+  echo "changeit" > broker_certs/broker_keystore_cred.txt
+  echo "changeit" > broker_certs/broker_key_cred.txt
+  echo "changeit" > broker_certs/broker_truststore_cred.txt
+}
+
 function generateconnectcert() {
 
   mkdir -p connect_certs
@@ -92,27 +113,6 @@ function generateconnectcert() {
   echo "changeit" > connect_certs/connect_key_cred.txt
   echo "changeit" > connect_certs/connect_truststore_cred.txt
 
-}
-
-function generatebrokercert() {
-
-  mkdir broker_certs
-
-  keytool -keystore broker_certs/broker_truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
-
-  keytool -keystore broker_certs/broker_keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" -ext SAN=DNS:broker
-
-  keytool -keystore broker_certs/broker_keystore.jks -alias broker -certreq -file broker_certs/broker-unsigned.crt -storepass changeit -noprompt
-
-  openssl x509 -req -CA certs/root-ca.crt -CAkey certs/root-ca.key -in broker_certs/broker-unsigned.crt -out broker_certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
-
-  keytool -keystore broker_certs/broker_keystore.jks -alias ekk-root-ca -importcert -file certs/root-ca.crt -storepass changeit -noprompt
-
-  keytool -keystore broker_certs/broker_keystore.jks -alias broker -importcert -file broker_certs/broker.crt -storepass changeit -noprompt
-
-  echo "changeit" > broker_certs/broker_keystore_cred.txt
-  echo "changeit" > broker_certs/broker_key_cred.txt
-  echo "changeit" > broker_certs/broker_truststore_cred.txt
 }
 
 function generatepasswords() {
