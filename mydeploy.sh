@@ -240,10 +240,6 @@ function install() {
   sudo chmod -R 777 /opt/EKK/certs
   mkdir -p broker_data
   sudo chown -hR 1000 /opt/EKK/broker_data
-  mkdir -p zoo_data
-  sudo chown -hR 1000 /opt/EKK/zoo_data
-  mkdir -p zoo_log
-  sudo chown -hR 1000 /opt/EKK/zoo_log
 
   generatepasswords
   configuredocker
