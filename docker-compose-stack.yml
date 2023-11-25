@@ -14,10 +14,10 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     volumes:
       - type: volume
-        source: /opt/EKK/zoo_data
+        source: zoo_data
         target: /var/lib/zookeeper/data
       - type: volume
-        source: /opt/EKK/zoo_log
+        source: zoo_log
         target: /var/lib/zookeeper/log
     
 
@@ -51,7 +51,7 @@ services:
       - esnet
     volumes:
       - type: volume
-        source: /opt/EKK/broker_data
+        source: broker_data
         target: /var/lib/kafka/data
       - type: bind
         source: /opt/EKK/broker_certs
@@ -219,11 +219,11 @@ volumes:
   esdata:
     driver: local
   broker_data:
-    external: true
+    driver: local
   zoo_data:
-    external: true
+    driver: local
   zoo_log:
-    external: true
+    driver: local
   
 
 networks:
