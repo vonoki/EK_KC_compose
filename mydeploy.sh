@@ -61,21 +61,6 @@ function generatekibanacert() {
   mv certs/kibana.key certs/kibana.key.pem && openssl pkcs8 -in certs/kibana.key.pem -topk8 -nocrypt -out certs/kibana.key
 }
 
-function populatecerts() {
-  #add to docker secrets
-  echo -e "\e[32m[X]\e[0m Adding certificates and keys to Docker"
-  #ca cert
-  docker secret create ca.crt certs/root-ca.crt
-
-  #elasticsearch server
-  docker secret create elasticsearch.key certs/elasticsearch.key
-  docker secret create elasticsearch.crt certs/elasticsearch.crt
-
-  #kibana server
-  docker secret create kibana.key certs/kibana.key
-  docker secret create kibana.crt certs/kibana.crt
-}
-
 function generateconnectcert() {
 
   mkdir -p connect_certs
@@ -126,15 +111,6 @@ function generatebrokercert() {
   echo "changeit" > broker_certs/broker_keystore_cred.txt
   echo "changeit" > broker_certs/broker_key_cred.txt
   echo "changeit" > broker_certs/broker_truststore_cred.txt
-}
-
-function initdockerswarm() {
-  echo -e "\e[32m[X]\e[0m Configuring Docker swarm"
-  docker swarm init --advertise-addr "$logstaship"
-  if [ "$?" == 1 ]; then
-    echo -e "\e[31m[!]\e[0m Failed to initialize docker swarm (Is $logstaship the correct IP address?) - exiting"
-    exit 1
-  fi
 }
 
 function generatepasswords() {
@@ -268,8 +244,6 @@ function install() {
   mkdir -p zoo_log
   sudo chown -hR 1000 /opt/EKK/zoo_log
 
-  initdockerswarm
-  populatecerts
   generatepasswords
   configuredocker
 
