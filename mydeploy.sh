@@ -4,7 +4,6 @@
 function generateCA() {
 
   mkdir -p certs
-  sudo chown -hR 1000 /opt/EKK/certs
 
   openssl genrsa -out certs/root-ca.key
   openssl req -new -key certs/root-ca.key -out certs/root-ca.csr -subj "$CERT_STRING/CN=ekk"
@@ -65,6 +64,7 @@ function generateconnectcert() {
 
   mkdir -p connect_certs
   sudo chown -hR 1000 /opt/EKK/connect_certs
+
   openssl genrsa -out connect_certs/connect.key
 
   openssl req -new -key connect_certs/connect.key -out connect_certs/connect.csr -subj "$CERT_STRING/CN=kafka-connect"
@@ -237,6 +237,7 @@ function install() {
   generatekibanacert
   generateconnectcert
   generatebrokercert
+  sudo chmod -R 777 /opt/EKK/certs
   mkdir -p broker_data
   sudo chown -hR 1000 /opt/EKK/broker_data
   mkdir -p zoo_data
