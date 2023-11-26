@@ -44,7 +44,6 @@ services:
         target: /etc/kafka/secrets
     ports:
       - 29092:29092
-    command: "bash -c '/bin/kafka-storage format -t krvJhsSK683B_BWI0KVU1Q -c etc/kafka/kraft/server.properties'"
 
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.5.1
