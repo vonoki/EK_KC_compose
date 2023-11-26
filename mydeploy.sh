@@ -239,6 +239,7 @@ function install() {
   generatekibanacert
   generatebrokercert
   generateconnectcert
+  sudo chown -R 777 /opt/EKK/scripts
   sudo chown -R 777 /opt/EKK/connect_certs
   sudo chmod -R 777 /opt/EKK/broker_certs
   sudo chmod -R 777 /opt/EKK/certs
