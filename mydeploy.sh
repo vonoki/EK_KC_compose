@@ -15,7 +15,7 @@ function generateCA() {
     echo "subjectKeyIdentifier=hash"
   } >certs/root-ca.cnf
 
-  openssl x509 -req -days 3650 -in certs/root-ca.csr -signkey certs/root-ca.key -out certs/root-ca.crt -extfile certs/root-ca.cnf -extensions root_ca
+  openssl x509 -req -days 3650 -in certs/root-ca.csr -signkey certs/root-ca.key -out certs/root-ca.crt -extfile certs/root-ca.cnf -extensions ekk-root-ca
 }
 
 function generateelasticcert() {
@@ -35,7 +35,7 @@ function generateelasticcert() {
     echo "subjectKeyIdentifier=hash"
   } >certs/elasticsearch.cnf
 
-  openssl x509 -req -days 750 -in certs/elasticsearch.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/elasticsearch.crt -extfile certs/elasticsearch.cnf -extensions server
+  openssl x509 -req -days 750 -in certs/elasticsearch.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/elasticsearch.crt -extfile certs/elasticsearch.cnf -extensions elasticsearch
   mv certs/elasticsearch.key certs/elasticsearch.key.pem && openssl pkcs8 -in certs/elasticsearch.key.pem -topk8 -nocrypt -out certs/elasticsearch.key
 }
 
@@ -56,23 +56,25 @@ function generatekibanacert() {
     echo "subjectKeyIdentifier=hash"
   } >certs/kibana.cnf
 
-  openssl x509 -req -days 750 -in certs/kibana.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/kibana.crt -extfile certs/kibana.cnf -extensions server
+  openssl x509 -req -days 750 -in certs/kibana.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out certs/kibana.crt -extfile certs/kibana.cnf -extensions kibana
   mv certs/kibana.key certs/kibana.key.pem && openssl pkcs8 -in certs/kibana.key.pem -topk8 -nocrypt -out certs/kibana.key
 }
 
 function generatebrokercert() {
 
+  openssl req -new -x509 -keyout broker_certs/kafka-ca.key -out broker_certs/kafka-ca.crt -days 3650
+  
   mkdir broker_certs
 
-  keytool -keystore broker_certs/broker_truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -keypass changeit -noprompt
+  keytool -keystore broker_certs/broker_truststore.jks -import -file broker_certs/kafka-ca.crt -alias kafka-root-ca -storepass changeit -keypass changeit -noprompt
 
-  keytool -keystore broker_certs/broker_keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" #-ext SAN=DNS:broker
+  keytool -keystore broker_certs/broker_keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" -ext SAN=DNS:broker
 
   keytool -keystore broker_certs/broker_keystore.jks -alias broker -certreq -file broker_certs/broker-unsigned.crt -storepass changeit -keypass changeit -noprompt
 
-  openssl x509 -req -CA certs/root-ca.crt -CAkey certs/root-ca.key -in broker_certs/broker-unsigned.crt -out broker_certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
+  openssl x509 -req -CA certs/kafka-ca.crt -CAkey broker_certs/kafka-ca.key -in broker_certs/broker-unsigned.crt -out broker_certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
 
-  keytool -keystore broker_certs/broker_keystore.jks -alias ekk-root-ca -importcert -file certs/root-ca.crt -storepass changeit -keypass changeit -noprompt
+  keytool -keystore broker_certs/broker_keystore.jks -alias kafka-root-ca -importcert -file broker_certs/kafka-ca.crt -storepass changeit -keypass changeit -noprompt
 
   keytool -keystore broker_certs/broker_keystore.jks -alias broker -importcert -file broker_certs/broker.crt -storepass changeit -keypass changeit -noprompt
 
@@ -103,15 +105,13 @@ function generateconnectcert() {
   openssl x509 -req -days 750 -in connect_certs/connect.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out connect_certs/connect.crt -extfile connect_certs/connect.cnf -extensions server
   mv connect_certs/connect.key connect_certs/connect.key.pem && openssl pkcs8 -in connect_certs/connect.key.pem -topk8 -nocrypt -out connect_certs/connect.key
 
-  keytool -keystore connect_certs/connect.truststore.jks -import -file certs/root-ca.crt -alias EKK-root-ca -storepass changeit -noprompt
+  keytool -keystore connect_certs/connect.truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
+  
+  keytool -keystore connect_certs/connect.truststore.jks -import -file certs/kafka-ca.crt -alias kafka-root-ca -storepass changeit -noprompt
 
   openssl pkcs12 -export -out connect_certs/connect.p12 -in connect_certs/connect.crt -inkey connect_certs/connect.key
 
   keytool -destkeystore connect_certs/connect.keystore.jks -importkeystore -srckeystore connect_certs/connect.p12 -srcstoretype PKCS12
-
-  echo "changeit" > connect_certs/connect_keystore_cred.txt
-  echo "changeit" > connect_certs/connect_key_cred.txt
-  echo "changeit" > connect_certs/connect_truststore_cred.txt
 
 }
 
