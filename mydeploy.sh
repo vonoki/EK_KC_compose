@@ -72,7 +72,7 @@ function generatebrokercert() {
 
   keytool -keystore broker_certs/broker_keystore.jks -alias broker -certreq -file broker_certs/broker-unsigned.crt -storepass changeit -keypass changeit -noprompt
 
-  openssl x509 -req -CA certs/kafka-ca.crt -CAkey broker_certs/kafka-ca.key -in broker_certs/broker-unsigned.crt -out broker_certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
+  openssl x509 -req -CA broker_certs/kafka-ca.crt -CAkey broker_certs/kafka-ca.key -in broker_certs/broker-unsigned.crt -out broker_certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
 
   keytool -keystore broker_certs/broker_keystore.jks -alias kafka-root-ca -importcert -file broker_certs/kafka-ca.crt -storepass changeit -keypass changeit -noprompt
 
@@ -107,7 +107,7 @@ function generateconnectcert() {
 
   keytool -keystore connect_certs/connect.truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
   
-  keytool -keystore connect_certs/connect.truststore.jks -import -file certs/kafka-ca.crt -alias kafka-root-ca -storepass changeit -noprompt
+  keytool -keystore connect_certs/connect.truststore.jks -import -file broker_certs/kafka-ca.crt -alias kafka-root-ca -storepass changeit -noprompt
 
   openssl pkcs12 -export -out connect_certs/connect.p12 -in connect_certs/connect.crt -inkey connect_certs/connect.key
 
