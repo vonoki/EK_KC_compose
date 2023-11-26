@@ -2,9 +2,19 @@ version: '3.9'
 
 services:
 
+  kafka-gen:
+    image: confluentinc/cp-kafka:7.5.1
+    hostname: kafka-gen
+    container_name: kafka-gen
+    volumes:
+      - ./scripts/create_cluster_id.sh:/tmp/create_cluster_id.sh
+      - ./clusterID:/tmp/clusterID
+    command: "bash -c '/tmp/create_cluster_id.sh'"
+
   broker:
     image: confluentinc/cp-kafka:7.5.1
     hostname: broker
+    container_name: broker
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_NODE_ID: 1
@@ -16,6 +26,11 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:9093
+      KAFKA_ENABLE_KRAFT: 'yes'
+      #CLUSTER_ID: 45vUBEgyQjSywv_811biQw
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_SECURITY_PROTOCOL: SSL
       KAFKA_SSL_KEYSTORE_FILENAME: broker_keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: broker_keystore_cred.txt
@@ -24,13 +39,12 @@ services:
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker_truststore_cred.txt
       KAFKA_SSL_CLIENT_AUTH: required
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM:
+      KAFKA_METADATA_LOG_SEGMENT_MS: 15000
+      KAFKA_METADATA_MAX_RETENTION_MS: 1200000
+      KAFKA_METADATA_LOG_MAX_RECORD_BYTES_BETWEEN_SNAPSHOTS: 2800
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       #KAFKA_MESSAGE_MAX_BYTES: 400000000
       #KAFKA_SOCKET_REQUEST_MAX_BYTES: 400001200
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:9093
-      KAFKA_ENABLE_KRAFT: 'yes'
-      CLUSTER_ID: 45vUBEgyQjSywv_811biQw
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
     networks:
       - esnet
     volumes:
@@ -40,12 +54,16 @@ services:
       - type: bind
         source: /opt/EKK/broker_certs
         target: /etc/kafka/secrets
+      - ./scripts/update_run.sh:/tmp/update_run.sh
+      - ./clusterID:/tmp/clusterID
     ports:
       - 29092:29092
+    command: "bash -c '/tmp/update_run.sh && /etc/confluent/docker/run'"
 
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.5.1
     hostname: kafka-connect
+    container_name: kafka-connect
     environment:
       CONNECT_BOOTSTRAP_SERVERS: broker:9092
       CONNECT_REST_PORT: 8083
@@ -103,6 +121,7 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
     hostname: elasticsearch
+    container_name: elasticsearch
     environment:
       cluster.name: hyphy
       node.name: es01
@@ -162,6 +181,7 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:8.10.2
     hostname: kibana
+    container_name: kibana
     environment:
       SERVER_NAME: kibana
       ELASTICSEARCH_HOSTS: https://elasticsearch:9200

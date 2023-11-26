@@ -64,7 +64,7 @@ function generatebrokercert() {
 
   mkdir -p broker_certs
 
-  openssl req -new -x509 -keyout broker_certs/kafka-ca.key -out broker_certs/kafka-ca.crt -days 3650
+  openssl req -new -x509 -keyout broker_certs/kafka-ca.key -out broker_certs/kafka-ca.crt -days 3650 -subj "$CERT_STRING/CN=kafka-root-ca"
 
   keytool -keystore broker_certs/broker_truststore.jks -import -file broker_certs/kafka-ca.crt -alias kafka-root-ca -storepass changeit -keypass changeit -noprompt
 
