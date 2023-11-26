@@ -240,7 +240,9 @@ function install() {
   generatebrokercert
   generateconnectcert
   sudo chmod -R 777 /opt/EKK/scripts
-  sudo chown -R 777 /opt/EKK/connect_certs
+  sudo chmod -R 777 /opt/EKK/clusterID
+  sudo chmod -R 777 /opt/EKK/connect-plugins
+  sudo chmod -R 777 /opt/EKK/connect_certs
   sudo chmod -R 777 /opt/EKK/broker_certs
   sudo chmod -R 777 /opt/EKK/certs
   mkdir -p broker_data
