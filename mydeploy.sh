@@ -9,7 +9,7 @@ function generateCA() {
   openssl req -new -key certs/root-ca.key -out certs/root-ca.csr -subj "$CERT_STRING/CN=ekk"
 
   {
-    echo "[root_ca]"
+    echo "[ekk-root-ca]"
     echo "basicConstraints = critical,CA:TRUE,pathlen:1"
     echo "keyUsage = critical, nonRepudiation, cRLSign, keyCertSign"
     echo "subjectKeyIdentifier=hash"
@@ -25,7 +25,7 @@ function generateelasticcert() {
   openssl req -new -key certs/elasticsearch.key -out certs/elasticsearch.csr -subj "$CERT_STRING/CN=elasticsearch"
 
   {
-    echo "[server]"
+    echo "[elasticsearch]"
     echo "authorityKeyIdentifier=keyid,issuer"
     echo "basicConstraints = critical,CA:FALSE"
     echo "extendedKeyUsage=serverAuth,clientAuth"
@@ -46,7 +46,7 @@ function generatekibanacert() {
   openssl req -new -key certs/kibana.key -out certs/kibana.csr -subj "$CERT_STRING/CN=kibana"
 
   {
-    echo "[server]"
+    echo "[kibana]"
     echo "authorityKeyIdentifier=keyid,issuer"
     echo "basicConstraints = critical,CA:FALSE"
     echo "extendedKeyUsage=serverAuth"
