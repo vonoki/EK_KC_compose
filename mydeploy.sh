@@ -9,13 +9,13 @@ function generateCA() {
   openssl req -new -key certs/root-ca.key -out certs/root-ca.csr -subj "$CERT_STRING/CN=ekk"
 
   {
-    echo "[ekk-root-ca]"
+    echo "[ekk_root_ca]"
     echo "basicConstraints = critical,CA:TRUE,pathlen:1"
     echo "keyUsage = critical, nonRepudiation, cRLSign, keyCertSign"
     echo "subjectKeyIdentifier=hash"
   } >certs/root-ca.cnf
 
-  openssl x509 -req -days 3650 -in certs/root-ca.csr -signkey certs/root-ca.key -out certs/root-ca.crt -extfile certs/root-ca.cnf -extensions ekk-root-ca
+  openssl x509 -req -days 3650 -in certs/root-ca.csr -signkey certs/root-ca.key -sha256 -out certs/root-ca.crt -extfile certs/root-ca.cnf -extensions ekk_root_ca
 }
 
 function generateelasticcert() {
@@ -87,7 +87,7 @@ function generatebrokercert() {
 
   mkdir broker_certs
 
-  keytool -keystore broker_certs/broker_truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
+  keytool -keystore broker_certs/broker_truststore.jks -import -file certs/root-ca.crt -alias ekk_root_ca -storepass changeit -noprompt
 
   keytool -keystore broker_certs/broker_keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" -ext SAN=DNS:broker
 
@@ -95,7 +95,7 @@ function generatebrokercert() {
 
   openssl x509 -req -CA certs/root-ca.crt -CAkey certs/root-ca.key -in broker_certs/broker-unsigned.crt -out broker_certs/broker.crt -days 365 -CAcreateserial -passin pass:changeit
 
-  keytool -keystore broker_certs/broker_keystore.jks -alias ekk-root-ca -importcert -file certs/root-ca.crt -storepass changeit -noprompt
+  keytool -keystore broker_certs/broker_keystore.jks -alias ekk_root_ca -importcert -file certs/root-ca.crt -storepass changeit -noprompt
 
   keytool -keystore broker_certs/broker_keystore.jks -alias broker -importcert -file broker_certs/broker.crt -storepass changeit -noprompt
 
@@ -113,7 +113,7 @@ function generateconnectcert() {
   openssl req -new -key connect_certs/connect.key -out connect_certs/connect.csr -subj "$CERT_STRING/CN=kafka-connect"
 
   {
-    echo "[server]"
+    echo "[kafka-connect]"
     echo "authorityKeyIdentifier=keyid,issuer"
     echo "basicConstraints = critical,CA:FALSE"
     echo "extendedKeyUsage=serverAuth,clientAuth"
@@ -123,10 +123,10 @@ function generateconnectcert() {
     echo "subjectKeyIdentifier=hash"
   } >connect_certs/connect.cnf
 
-  openssl x509 -req -days 750 -in connect_certs/connect.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out connect_certs/connect.crt -extfile connect_certs/connect.cnf -extensions server
-  mv connect_certs/connect.key connect_certs/connect.key.pem && openssl pkcs8 -in connect_certs/connect.key.pem -topk8 -nocrypt -out connect_certs/connect.key
+  openssl x509 -req -days 750 -in connect_certs/connect.csr -CA certs/root-ca.crt -CAkey certs/root-ca.key -CAcreateserial -out connect_certs/connect.crt -extfile connect_certs/connect.cnf -extensions kafka-connect
+  #mv connect_certs/connect.key connect_certs/connect.key.pem && openssl pkcs8 -in connect_certs/connect.key.pem -topk8 -nocrypt -out connect_certs/connect.key
 
-  keytool -keystore connect_certs/connect.truststore.jks -import -file certs/root-ca.crt -alias ekk-root-ca -storepass changeit -noprompt
+  keytool -keystore connect_certs/connect.truststore.jks -import -file certs/root-ca.crt -alias ekk_root_ca -storepass changeit -noprompt
   
   #keytool -keystore connect_certs/connect.truststore.jks -import -file broker_certs/kafka-ca.crt -alias kafka-root-ca -storepass changeit -noprompt
 

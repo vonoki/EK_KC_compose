@@ -32,7 +32,6 @@ services:
       KAFKA_ENABLE_KRAFT: 'yes'
       CLUSTER_ID: krvJhsSK683B_BWI0KVU1Q
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
     networks:
       - esnet
     volumes:
