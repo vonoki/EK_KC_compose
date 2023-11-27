@@ -287,7 +287,7 @@ function install() {
   echo "## elastic:$elastic_user_pass"
   echo "##"
   echo "## System Credentials"
-  echo "## kibana:$kibana_system_pass"
+  echo "## kibana_system:$kibana_system_pass"
   echo "##################################################################################"
   echo ""
 }
