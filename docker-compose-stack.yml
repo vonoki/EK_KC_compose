@@ -24,14 +24,13 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 
       KAFKA_SECURITY_PROTOCOL: SSL
       KAFKA_SSL_ENABLED_MECHANISMS: PLAIN,SSL
-      KAFKA_SSL_KEYSTORE_FILENAME: broker_keystore.jks
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.keystore.jks
       KAFKA_SSL_KEYSTORE_CREDENTIALS: broker_keystore_cred.txt
       KAFKA_SSL_KEY_CREDENTIALS: broker_key_cred.txt
-      KAFKA_SSL_TRUSTSTORE_FILENAME: broker_truststore.jks
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker_truststore_cred.txt
       KAFKA_SSL_CLIENT_AUTH: requested
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM:
-
     networks:
       - esnet
     volumes:
