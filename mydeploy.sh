@@ -64,6 +64,7 @@ function generatebrokercert() {
 
   mkdir broker_certs
 
+
   keytool -keystore broker_certs/kafka.keystore.jks -alias broker -keyalg RSA -validity 365 -genkey -storepass changeit -keypass changeit -dname "C=UA,ST=Khm,L=Hyphy,O=Digital,CN=broker" -ext SAN=DNS:broker
 
   keytool -keystore broker_certs/kafka.keystore.jks -alias broker -certreq -file broker_certs/broker-unsigned.crt -storepass changeit -noprompt
@@ -72,7 +73,7 @@ function generatebrokercert() {
   #openssl x509 -req -CA certs/root-ca.crt -CAkey certs/root-ca.key -in certs/elasticsearch.csr -CAcreateserial -out certs/elasticsearch.crt -days 750 -extfile certs/elasticsearch.cnf -extensions elasticsearch
 
   keytool -keystore broker_certs/kafka.keystore.jks -alias ekk_root_ca -importcert -file certs/root-ca.crt -storepass changeit -noprompt
-
+  
   keytool -keystore broker_certs/kafka.keystore.jks -alias broker -importcert -file broker_certs/broker.crt -storepass changeit -noprompt
 
   keytool -keystore broker_certs/kafka.truststore.jks -import -file certs/root-ca.crt -alias ekk_root_ca -storepass changeit -noprompt
