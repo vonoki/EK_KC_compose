@@ -64,7 +64,7 @@ function generatekafkacert() {
   -days 3650 \
   -in kafka_certs/kafka.csr \
   -CA certs/root-ca.crt \
-  -CAkey rerts/root-ca.key \
+  -CAkey certs/root-ca.key \
   -CAcreateserial \
   -out kafka_certs/kafka.crt \
   -extfile kafka_certs/kafka.cnf \
