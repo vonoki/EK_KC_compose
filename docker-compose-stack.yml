@@ -30,7 +30,7 @@ services:
       KAFKA_SSL_TRUSTSTORE_FILENAME: /etc/kafka/secrets/kafka.truststore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker_truststore_cred.txt
       KAFKA_SSL_CLIENT_AUTH: required
-      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM:
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
     networks:
       - esnet
     volumes:
