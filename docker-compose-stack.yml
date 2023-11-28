@@ -35,7 +35,7 @@ services:
       - esnet
     volumes:
       - type: volume
-        source: /opt/EKK/kafka_data
+        source: kafka_data
         target: /var/lib/kafka/data
       - type: bind
         source: /opt/EKK/kafka_certs
